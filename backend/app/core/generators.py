@@ -3,7 +3,13 @@ from datetime import datetime
 from sqlalchemy import select
 from sqlalchemy.engine import Connection
 
-from app.models.entities import Cours, Departement, Etudiant, Faculte
+from app.models.cours import Cours
+from app.models.departements import Departement
+from app.models.enseignants import Enseignant
+from app.models.etudiants import Etudiant
+from app.models.facultes import Faculte
+from app.models.filieres import Filiere
+from app.models.promotions import Promotion
 
 
 def _next_sequence(codes: list[str], prefix: str, width: int) -> str:
@@ -41,12 +47,21 @@ def generate_matricule(connection: Connection) -> str:
   return _next_sequence(codes, prefix, 4)
 
 
-def generate_cours_code(connection: Connection, departement_id: int) -> str:
-  departement_code = connection.execute(
-    select(Departement.code).where(Departement.id == departement_id)
+def generate_enseignant_matricule(connection: Connection) -> str:
+  year = datetime.now().year
+  prefix = f"ENS-{year}-"
+  codes = connection.execute(select(Enseignant.matricule)).scalars().all()
+  return _next_sequence(codes, prefix, 4)
+
+
+def generate_cours_code(connection: Connection, promotion_id: int) -> str:
+  filiere_sigle = connection.execute(
+    select(Filiere.sigle)
+    .join(Promotion, Promotion.filiere_id == Filiere.id)
+    .where(Promotion.id == promotion_id)
   ).scalar_one()
+  prefix = f"{filiere_sigle}-CRS-"
   codes = connection.execute(
-    select(Cours.code).where(Cours.departement_id == departement_id)
+    select(Cours.code).where(Cours.code.like(f"{prefix}%"))
   ).scalars().all()
-  prefix = f"{departement_code}-CRS-"
   return _next_sequence(codes, prefix, 3)

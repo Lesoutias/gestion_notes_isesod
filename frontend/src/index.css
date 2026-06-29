@@ -1,7 +1,134 @@
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap");
 @import "tailwindcss";
 
-body {
-  margin: 0;
-  min-height: 100vh;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+@theme {
+  --font-display: "Playfair Display", ui-serif, Georgia, serif;
+  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+
+  --shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.35);
+  --shadow-glow: 0 0 40px rgba(48, 71, 201, 0.15);
+
+  --color-brand-50: #f4f6ff;
+  --color-brand-100: #e8ebff;
+  --color-brand-200: #c7cef9;
+  --color-brand-300: #9aa8f0;
+  --color-brand-400: #6378e5;
+  --color-brand-500: #3047c9;
+  --color-brand-600: #1b2a8f;
+  --color-brand-700: #101b66;
+  --color-brand-800: #071147;
+  --color-brand-900: #010a48;
+
+  --color-ink-900: #f8fafc;
+  --color-ink-700: #cbd5e1;
+  --color-ink-500: #94a3b8;
+  --color-ink-400: #64748b;
+
+  --color-warm-50: #0b1029;
+  --color-warm-100: #111827;
+  --color-warm-200: #1e293b;
+
+  --color-success-500: #22c55e;
+  --color-success-600: #16a34a;
+  --color-warning-500: #f59e0b;
+  --color-warning-600: #d97706;
+  --color-danger-500: #ef4444;
+  --color-danger-600: #dc2626;
+  --color-info: #2563eb;
+
+  --color-accent-gold: #d69e2e;
+
+  --color-background: #0b1029;
+  --color-surface: #111827;
+  --color-surface-elevated: #1e293b;
+  --color-on-surface: #f8fafc;
+  --color-on-surface-variant: #94a3b8;
+  --color-outline: rgba(255, 255, 255, 0.1);
+  --color-primary: #3047c9;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #101b66;
+}
+
+@layer base {
+  html {
+    @apply font-sans antialiased;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-warm-50 text-ink-900;
+    overflow-x: hidden;
+  }
+
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  [role="button"][aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-display);
+  }
+
+  .font-mono {
+    font-family: var(--font-mono);
+  }
+
+  .portal-line-bg {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+
+  .portal-line-bg svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .portal-line-bg .portal-line {
+    stroke: var(--color-brand-500);
+    stroke-width: 1;
+    fill: none;
+    opacity: 0.12;
+    stroke-dasharray: 8 12;
+    animation: portal-line-flow 14s linear infinite;
+  }
+
+  .portal-orbit-ring {
+    animation: portal-orbit-spin 18s linear infinite;
+  }
+
+  .portal-orbit-ring-reverse {
+    animation: portal-orbit-spin 26s linear infinite reverse;
+  }
+}
+
+@keyframes portal-line-flow {
+  to {
+    stroke-dashoffset: -400;
+  }
+}
+
+@keyframes portal-orbit-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }

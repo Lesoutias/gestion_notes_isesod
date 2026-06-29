@@ -239,9 +239,14 @@ def _get_or_create_promotion(
 
 
 def _get_or_create_annee_academique(db: Session) -> AnneeAcademique:
+  from app.services.academic import activate_annee_academique
+
   annee = db.query(AnneeAcademique).filter_by(libelle=ANNEE_LIBELLE).first()
   if annee:
+    if annee.statut != StatutAnneeAcademique.active:
+      return activate_annee_academique(db, annee)
     return annee
+
   annee = AnneeAcademique(
     libelle=ANNEE_LIBELLE,
     date_debut=date(2025, 9, 1),
@@ -250,7 +255,7 @@ def _get_or_create_annee_academique(db: Session) -> AnneeAcademique:
   )
   db.add(annee)
   db.flush()
-  return annee
+  return activate_annee_academique(db, annee)
 
 
 def _get_or_create_cours(

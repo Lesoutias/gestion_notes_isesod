@@ -51,22 +51,16 @@ def list_annees_academiques(
   return db.query(AnneeAcademique).order_by(AnneeAcademique.date_debut.desc()).all()
 
 
-@router.get("/active", response_model=AnneeAcademiqueResponse)
+@router.get("/active", response_model=AnneeAcademiqueResponse | None)
 def get_active_annee_academique(
   db: Session = Depends(get_db),
   _: User = Depends(require_admin),
 ):
-  annee = (
+  return (
     db.query(AnneeAcademique)
     .filter(AnneeAcademique.statut == StatutAnneeAcademique.active)
     .first()
   )
-  if not annee:
-    raise HTTPException(
-      status_code=status.HTTP_404_NOT_FOUND,
-      detail="Aucune année académique active",
-    )
-  return annee
 
 
 @router.put("/{annee_id}", response_model=AnneeAcademiqueResponse)

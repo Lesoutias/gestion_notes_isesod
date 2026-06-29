@@ -16,16 +16,19 @@ def verify_password(password: str, hashed: str) -> bool:
   return bcrypt.checkpw(password.encode("utf-8"), hashed.encode("utf-8"))
 
 
-def create_access_token(user_id: int, role: str) -> str:
-  expire = datetime.now(timezone.utc) + timedelta(
-    minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
-  )
+def get_access_token_lifetime() -> timedelta:
+  return timedelta(days=settings.ACCESS_TOKEN_EXPIRE_DAYS)
+
+
+def create_access_token(user_id: int, role: str) -> tuple[str, datetime]:
+  expire = datetime.now(timezone.utc) + get_access_token_lifetime()
   payload = {
     "sub": str(user_id),
     "role": role,
     "exp": expire,
   }
-  return jwt.encode(payload, settings.SECRET_KEY, algorithm=ALGORITHM)
+  token = jwt.encode(payload, settings.SECRET_KEY, algorithm=ALGORITHM)
+  return token, expire
 
 
 def decode_access_token(token: str) -> dict:

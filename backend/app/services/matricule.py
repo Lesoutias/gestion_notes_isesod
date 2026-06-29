@@ -27,3 +27,22 @@ def enseignant_has_account(db: Session, enseignant: Enseignant) -> bool:
   if enseignant.user_id:
     return True
   return db.query(User).filter(User.enseignant_id == enseignant.id).first() is not None
+
+
+def get_enseignant_login(db: Session, enseignant: Enseignant) -> str | None:
+  if enseignant.user_id:
+    user = db.query(User).filter(User.id == enseignant.user_id).first()
+    if user:
+      return user.login
+  user = db.query(User).filter(User.enseignant_id == enseignant.id).first()
+  if user:
+    return user.login
+  if enseignant.matricule:
+    return matricule_to_login(enseignant.matricule)
+  return None
+
+
+def matricule_to_login(matricule: str) -> str:
+  normalized = normalize_matricule(matricule).lower()
+  login = "".join(ch if ch.isalnum() else "." for ch in normalized)
+  return login.strip(".")

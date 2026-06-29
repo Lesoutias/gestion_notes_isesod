@@ -205,8 +205,36 @@ class EnseignantResponse(BaseModel):
 
 # --- Cours ---
 
+class CoursCatalogueCreate(BaseModel):
+  """Catalogue : intitulé, code et description uniquement."""
+  intitule: str = Field(max_length=150)
+  code: str | None = Field(default=None, max_length=30)
+  description: str | None = None
+
+
+class CoursCatalogueUpdate(BaseModel):
+  intitule: str | None = Field(default=None, max_length=150)
+  code: str | None = Field(default=None, max_length=30)
+  description: str | None = None
+
+
+class AffectationCoursCreate(BaseModel):
+  cours_id: int
+  promotion_id: int
+  volume_horaire: int = Field(ge=1)
+  semestre: str | None = Field(default=None, max_length=20)
+  type_cours: str | None = Field(default=None, max_length=50)
+
+
+class AffectationCoursUpdate(BaseModel):
+  promotion_id: int | None = None
+  volume_horaire: int | None = Field(default=None, ge=1)
+  semestre: str | None = Field(default=None, max_length=20)
+  type_cours: str | None = Field(default=None, max_length=50)
+
+
 class CoursAdminCreate(BaseModel):
-  """Création admin : code et crédits générés automatiquement."""
+  """Création admin legacy : code et crédits générés automatiquement."""
   intitule: str = Field(max_length=150)
   volume_horaire: int = Field(ge=1)
   promotion_id: int
@@ -241,10 +269,12 @@ class CoursResponse(BaseModel):
   id: int
   code: str | None
   intitule: str
-  volume_horaire: int
+  description: str | None = None
+  volume_horaire: int | None
   credits: int
   points_max: float
-  promotion_id: int
+  promotion_id: int | None
+  source_cours_id: int | None = None
   enseignant_id: int | None
   semestre: str | None
   type_cours: str | None

@@ -1,30 +1,39 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.deps import require_admin
 from app.models import Cours, User
-from app.schemas.academic import CoursAdminCreate, CoursResponse, CoursUpdate
-from app.services.academic import (
-  apply_update,
-  ensure_cours_deletable,
-  ensure_enseignant_exists,
-  ensure_promotion_exists,
-  get_or_404,
+from app.schemas.academic import (
+  CoursCatalogueCreate,
+  CoursCatalogueUpdate,
+  CoursResponse,
 )
+from app.services.academic import apply_update, ensure_cours_deletable, get_or_404
 
 router = APIRouter(prefix="/cours", tags=["Admin — Cours"])
 
 
 @router.post("/", response_model=CoursResponse, status_code=status.HTTP_201_CREATED)
-def create_cours(
-  payload: CoursAdminCreate,
+def create_cours_catalogue(
+  payload: CoursCatalogueCreate,
   db: Session = Depends(get_db),
   _: User = Depends(require_admin),
 ):
-  ensure_promotion_exists(db, payload.promotion_id)
+  if payload.code and db.query(Cours).filter(Cours.code == payload.code).first():
+    raise HTTPException(
+      status_code=status.HTTP_409_CONFLICT,
+      detail="Ce code de cours est déjà utilisé",
+    )
 
-  cours = Cours(**payload.model_dump())
+  cours = Cours(
+    intitule=payload.intitule,
+    code=payload.code,
+    description=payload.description,
+    volume_horaire=0,
+    credits=0,
+    promotion_id=None,
+  )
   db.add(cours)
   db.commit()
   db.refresh(cours)
@@ -32,36 +41,55 @@ def create_cours(
 
 
 @router.get("/", response_model=list[CoursResponse])
-def list_cours(
+def list_cours_catalogue(
   db: Session = Depends(get_db),
   _: User = Depends(require_admin),
 ):
-  return db.query(Cours).order_by(Cours.intitule).all()
+  return (
+    db.query(Cours)
+    .filter(Cours.promotion_id.is_(None))
+    .order_by(Cours.intitule)
+    .all()
+  )
 
 
 @router.get("/{cours_id}", response_model=CoursResponse)
-def get_cours(
+def get_cours_catalogue(
   cours_id: int,
-  db: Session = Depends(get_db),
-  _: User = Depends(require_admin),
-):
-  return get_or_404(db, Cours, cours_id, "Cours")
-
-
-@router.put("/{cours_id}", response_model=CoursResponse)
-def update_cours(
-  cours_id: int,
-  payload: CoursUpdate,
   db: Session = Depends(get_db),
   _: User = Depends(require_admin),
 ):
   cours = get_or_404(db, Cours, cours_id, "Cours")
-  data = payload.model_dump(exclude_unset=True)
+  if cours.promotion_id is not None:
+    raise HTTPException(
+      status_code=status.HTTP_404_NOT_FOUND,
+      detail="Cours catalogue introuvable",
+    )
+  return cours
 
-  if "promotion_id" in data:
-    ensure_promotion_exists(db, data["promotion_id"])
-  if "enseignant_id" in data and data["enseignant_id"] is not None:
-    ensure_enseignant_exists(db, data["enseignant_id"])
+
+@router.put("/{cours_id}", response_model=CoursResponse)
+def update_cours_catalogue(
+  cours_id: int,
+  payload: CoursCatalogueUpdate,
+  db: Session = Depends(get_db),
+  _: User = Depends(require_admin),
+):
+  cours = get_or_404(db, Cours, cours_id, "Cours")
+  if cours.promotion_id is not None:
+    raise HTTPException(
+      status_code=status.HTTP_400_BAD_REQUEST,
+      detail="Ce cours est une affectation, pas une entrée catalogue",
+    )
+
+  data = payload.model_dump(exclude_unset=True)
+  if data.get("code"):
+    existing = db.query(Cours).filter(Cours.code == data["code"], Cours.id != cours_id).first()
+    if existing:
+      raise HTTPException(
+        status_code=status.HTTP_409_CONFLICT,
+        detail="Ce code de cours est déjà utilisé",
+      )
 
   apply_update(cours, payload)
   db.commit()
@@ -70,40 +98,17 @@ def update_cours(
 
 
 @router.delete("/{cours_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_cours(
+def delete_cours_catalogue(
   cours_id: int,
   db: Session = Depends(get_db),
   _: User = Depends(require_admin),
 ):
   cours = get_or_404(db, Cours, cours_id, "Cours")
+  if cours.promotion_id is not None:
+    raise HTTPException(
+      status_code=status.HTTP_400_BAD_REQUEST,
+      detail="Supprimez l'affectation depuis la page dédiée",
+    )
   ensure_cours_deletable(db, cours)
   db.delete(cours)
   db.commit()
-
-
-@router.patch("/{cours_id}/affecter-enseignant/{enseignant_id}", response_model=CoursResponse)
-def affecter_enseignant(
-  cours_id: int,
-  enseignant_id: int,
-  db: Session = Depends(get_db),
-  _: User = Depends(require_admin),
-):
-  cours = get_or_404(db, Cours, cours_id, "Cours")
-  ensure_enseignant_exists(db, enseignant_id)
-  cours.enseignant_id = enseignant_id
-  db.commit()
-  db.refresh(cours)
-  return cours
-
-
-@router.patch("/{cours_id}/retirer-enseignant", response_model=CoursResponse)
-def retirer_enseignant(
-  cours_id: int,
-  db: Session = Depends(get_db),
-  _: User = Depends(require_admin),
-):
-  cours = get_or_404(db, Cours, cours_id, "Cours")
-  cours.enseignant_id = None
-  db.commit()
-  db.refresh(cours)
-  return cours

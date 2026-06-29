@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.core.database import get_db
 from app.core.deps import get_current_user
-from app.core.security import create_access_token, hash_password, verify_password
+from app.core.security import create_access_token, get_access_token_lifetime, hash_password, verify_password
 from app.models import Enseignant, Etudiant, Role, RoleNom, StatutUser, User
 from app.schemas.academic import EnseignantResponse, EtudiantResponse
 from app.schemas.user import (
@@ -22,6 +22,8 @@ from app.services.matricule import (
   enseignant_has_account,
   find_enseignant_by_matricule,
   find_etudiant_by_matricule,
+  get_enseignant_login,
+  matricule_to_login,
   normalize_matricule,
 )
 
@@ -78,9 +80,12 @@ def _build_auth_user(user: User) -> AuthUserResponse:
 
 
 def _build_login_response(user: User) -> LoginResponse:
+  access_token, expires_at = create_access_token(user.id, user.role.nom)
   return LoginResponse(
-    access_token=create_access_token(user.id, user.role.nom),
+    access_token=access_token,
     token_type="bearer",
+    expires_in=int(get_access_token_lifetime().total_seconds()),
+    expires_at=expires_at,
     user=_build_auth_user(user),
     role=RoleResponse.model_validate(user.role),
     etudiant=EtudiantResponse.model_validate(user.etudiant) if user.etudiant else None,
@@ -113,6 +118,12 @@ def _ensure_email_available(db: Session, email: str | None) -> None:
       status_code=status.HTTP_409_CONFLICT,
       detail="Cet email est déjà utilisé",
     )
+
+
+def _resolve_account_credentials(payload, matricule: str) -> tuple[str, str]:
+  login = payload.login or matricule_to_login(matricule)
+  email = payload.email or f"{login}@isesod.local"
+  return login, email
 
 
 @router.post("/verify-matricule-etudiant", response_model=MatriculeVerifyResponse)
@@ -158,9 +169,13 @@ def verify_matricule_enseignant(
     )
 
   if enseignant_has_account(db, enseignant):
+    login = get_enseignant_login(db, enseignant)
+    detail = "Un compte existe déjà pour ce matricule."
+    if login:
+      detail += f" Connectez-vous avec l'identifiant « {login} » ou votre matricule."
     raise HTTPException(
       status_code=status.HTTP_409_CONFLICT,
-      detail="Un compte existe déjà pour ce matricule",
+      detail=detail,
     )
 
   return MatriculeVerifyResponse(
@@ -227,13 +242,14 @@ def register_etudiant(
       detail="Un compte existe déjà pour ce matricule",
     )
 
-  _ensure_login_available(db, payload.login)
-  _ensure_email_available(db, payload.email)
+  login, email = _resolve_account_credentials(payload, etudiant.matricule or payload.matricule)
+  _ensure_login_available(db, login)
+  _ensure_email_available(db, email)
 
   role = _get_role(db, RoleNom.etudiant)
   user = User(
-    login=payload.login,
-    email=payload.email,
+    login=login,
+    email=email,
     mot_de_passe_hash=hash_password(payload.mot_de_passe),
     role_id=role.id,
     statut=StatutUser.actif,
@@ -271,13 +287,16 @@ def register_enseignant(
       detail="Un compte existe déjà pour ce matricule",
     )
 
-  _ensure_login_available(db, payload.login)
-  _ensure_email_available(db, payload.email)
+  login, email = _resolve_account_credentials(
+    payload, enseignant.matricule or payload.matricule
+  )
+  _ensure_login_available(db, login)
+  _ensure_email_available(db, email)
 
   role = _get_role(db, RoleNom.enseignant)
   user = User(
-    login=payload.login,
-    email=payload.email,
+    login=login,
+    email=email,
     mot_de_passe_hash=hash_password(payload.mot_de_passe),
     role_id=role.id,
     statut=StatutUser.actif,

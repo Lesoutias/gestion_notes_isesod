@@ -115,9 +115,9 @@ def create_notes_bulk(
         .first()
       )
       if existing:
-        errors.append(
-          f"Étudiant {item.etudiant_id} : une note existe déjà pour cette évaluation"
-        )
+        existing.cote_obtenue = item.cote_obtenue
+        db.flush()
+        created.append(existing)
         continue
 
       note = Note(
@@ -182,5 +182,20 @@ def list_notes_for_evaluation(
     db.query(Note)
     .filter(Note.evaluation_id == evaluation.id)
     .order_by(Note.etudiant_id)
+    .all()
+  )
+
+
+def list_etudiants_for_evaluation(
+  db: Session,
+  evaluation_id: int,
+  enseignant_id: int,
+) -> list[Etudiant]:
+  evaluation = get_evaluation_for_enseignant(db, evaluation_id, enseignant_id)
+  cours = get_or_404(db, Cours, evaluation.cours_id, "Cours")
+  return (
+    db.query(Etudiant)
+    .filter(Etudiant.promotion_id == cours.promotion_id)
+    .order_by(Etudiant.nom, Etudiant.prenom)
     .all()
   )

@@ -122,16 +122,16 @@ class MatriculeVerifyResponse(BaseModel):
 
 class EtudiantRegisterRequest(BaseModel):
   matricule: str = Field(max_length=30)
-  login: str = Field(max_length=50)
-  email: InstitutionalEmail
   mot_de_passe: str = Field(min_length=8)
+  login: str | None = Field(default=None, max_length=50)
+  email: InstitutionalEmail | None = None
 
 
 class EnseignantRegisterRequest(BaseModel):
   matricule: str = Field(max_length=30)
-  login: str = Field(max_length=50)
-  email: InstitutionalEmail
   mot_de_passe: str = Field(min_length=8)
+  login: str | None = Field(default=None, max_length=50)
+  email: InstitutionalEmail | None = None
 
 
 class AuthUserResponse(BaseModel):
@@ -152,6 +152,8 @@ class AuthUserResponse(BaseModel):
 class LoginResponse(BaseModel):
   access_token: str
   token_type: str = "bearer"
+  expires_in: int
+  expires_at: datetime
   user: AuthUserResponse
   role: RoleResponse
   etudiant: EtudiantResponse | None = None

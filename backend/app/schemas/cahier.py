@@ -1,13 +1,38 @@
-from datetime import datetime
+from datetime import date, datetime
 
-from pydantic import BaseModel, ConfigDict, Field
-
+from pydantic import BaseModel, ConfigDict
 from app.models.enums import StatutDocument
 
 
 class CahierGenererRequest(BaseModel):
   cours_id: int
   annee_academique_id: int | None = None
+
+
+class EtudiantBriefResponse(BaseModel):
+  model_config = ConfigDict(from_attributes=True)
+
+  id: int
+  matricule: str | None
+  nom: str
+  postnom: str
+  prenom: str
+
+
+class CahierEvaluationTjBrief(BaseModel):
+  model_config = ConfigDict(from_attributes=True)
+
+  id: int
+  libelle: str
+  cote_maximale: float
+  date_evaluation: date
+
+
+class CahierLigneTjDetail(BaseModel):
+  evaluation_id: int
+  libelle: str
+  cote_obtenue: float
+  cote_maximale: float
 
 
 class CahierCotesLigneResponse(BaseModel):
@@ -26,6 +51,12 @@ class CahierCotesLigneResponse(BaseModel):
   points_ponderes: float
   points_max_ponderes: float
   appreciation: str | None
+  points_tj_obtenus: float | None = None
+  points_tj_max: float | None = None
+  points_examen_obtenus: float | None = None
+  points_examen_max: float | None = None
+  details_tj: list[CahierLigneTjDetail] = []
+  etudiant: EtudiantBriefResponse | None = None
 
 
 class CahierCotesResponse(BaseModel):
@@ -42,8 +73,8 @@ class CahierCotesResponse(BaseModel):
 
 
 class CahierCotesDetailResponse(CahierCotesResponse):
+  evaluations_tj: list[CahierEvaluationTjBrief] = []
   lignes: list[CahierCotesLigneResponse] = []
-
 
 class CahierCotesCreate(BaseModel):
   cours_id: int
@@ -93,4 +124,6 @@ class CahierCotesGenerateResponse(BaseModel):
   statut: StatutDocument
   date_generation: datetime
   date_validation: datetime | None = None
+  evaluations_tj: list[CahierEvaluationTjBrief] = []
   lignes: list[CahierCotesLigneResponse] = []
+  created: bool = True

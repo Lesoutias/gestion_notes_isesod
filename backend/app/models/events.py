@@ -43,9 +43,9 @@ def set_enseignant_matricule(_mapper, connection, target):
 
 
 def _apply_cours_fields(connection, target):
-  if target.volume_horaire is not None:
+  if target.volume_horaire is not None and target.volume_horaire > 0:
     target.credits = round(target.volume_horaire / 15)
-  if not target.code:
+  if target.promotion_id and not target.code:
     target.code = generate_cours_code(connection, target.promotion_id)
 
 

@@ -20,7 +20,7 @@ class Settings(BaseSettings):
   DEBUG: bool
   DATABASE_URL: str
   SECRET_KEY: str
-  ACCESS_TOKEN_EXPIRE_MINUTES: int
+  ACCESS_TOKEN_EXPIRE_DAYS: int = 3
   CORS_ORIGINS: str
   PORT: int
 

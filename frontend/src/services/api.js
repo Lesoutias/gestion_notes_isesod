@@ -98,6 +98,47 @@ export async function apiRequest(path, options = {}) {
   return data
 }
 
+export async function downloadFile(path, filename, options = {}) {
+  const { token, auth = true } = options
+
+  const storedAuth = auth ? getStoredAuth() : null
+  if (auth && storedAuth?.token && isSessionExpired(storedAuth)) {
+    notifySessionExpired()
+    throw new ApiError(STATUS_MESSAGES[401], 401)
+  }
+
+  const bearerToken = token ?? (auth ? getStoredToken() : null)
+
+  const response = await fetch(`${API_BASE}${path}`, {
+    method: 'GET',
+    headers: {
+      ...(bearerToken ? { Authorization: `Bearer ${bearerToken}` } : {}),
+    },
+  })
+
+  if (!response.ok) {
+    let data = null
+    const contentType = response.headers.get('content-type')
+    if (contentType?.includes('application/json')) {
+      data = await response.json()
+    }
+    if (response.status === 401) {
+      notifySessionExpired()
+    }
+    throw new ApiError(resolveErrorMessage(response.status, data), response.status, data)
+  }
+
+  const blob = await response.blob()
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  URL.revokeObjectURL(url)
+}
+
 export const api = {
   get: (path, options) => apiRequest(path, { ...options, method: 'GET' }),
   post: (path, body, options) => apiRequest(path, { ...options, method: 'POST', body }),

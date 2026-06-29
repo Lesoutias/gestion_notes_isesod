@@ -27,7 +27,7 @@ export function AdminLoginForm() {
 
     setFormError('')
     try {
-      await handleLogin(identifiant.trim(), motDePasse)
+      await handleLogin(identifiant.trim(), motDePasse, 'admin')
     } catch (error) {
       setFormError(error instanceof ApiError ? error.message : 'Connexion impossible')
     }

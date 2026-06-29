@@ -20,3 +20,6 @@ python-multipart>=0.0.20
 # Utilitaires
 python-dotenv>=1.0.1
 httpx>=0.28.1
+
+# Export PDF
+reportlab>=4.2.0

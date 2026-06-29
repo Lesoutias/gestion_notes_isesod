@@ -39,6 +39,22 @@ def _mettre_a_jour_compteurs(db: Session, fiche: FicheSynthetique) -> None:
     fiche.statut = StatutFicheSynthetique.complete
 
 
+def rafraichir_compteurs_fiche(db: Session, fiche: FicheSynthetique) -> FicheSynthetique:
+  """Recalcule les compteurs depuis la base (corrige les valeurs obsolètes)."""
+  ancien_recus = fiche.total_cours_recus
+  ancien_attendus = fiche.total_cours_attendus
+  ancien_statut = fiche.statut
+  _mettre_a_jour_compteurs(db, fiche)
+  if (
+    fiche.total_cours_recus != ancien_recus
+    or fiche.total_cours_attendus != ancien_attendus
+    or fiche.statut != ancien_statut
+  ):
+    db.commit()
+    db.refresh(fiche)
+  return fiche
+
+
 def get_or_create_fiche(
   db: Session,
   promotion_id: int,
@@ -116,6 +132,7 @@ def transferer_cahier_vers_fiche(db: Session, cahier: CahierCotes) -> FicheSynth
       )
     )
 
+  db.flush()
   _mettre_a_jour_compteurs(db, fiche)
   db.flush()
   return fiche
@@ -125,9 +142,23 @@ def get_fiche_or_404(db: Session, fiche_id: int) -> FicheSynthetique:
   return get_or_404(db, FicheSynthetique, fiche_id, "Fiche synthétique")
 
 
+def enrichir_fiche_detail(fiche: FicheSynthetique) -> FicheSynthetique:
+  """Trie les lignes pour l'affichage tableau croisé (cours × étudiants)."""
+  fiche.lignes.sort(
+    key=lambda ligne: (
+      ligne.cours.intitule if ligne.cours else "",
+      ligne.etudiant.nom if ligne.etudiant else "",
+      ligne.etudiant.prenom if ligne.etudiant else "",
+    )
+  )
+  return fiche
+
+
 def valider_fiche(db: Session, fiche: FicheSynthetique):
   from app.services.bulletin_service import generer_bulletins_depuis_fiche
   from app.services.releve_cotes_service import generer_releves_depuis_fiche
+
+  fiche = rafraichir_compteurs_fiche(db, fiche)
 
   if fiche.statut == StatutFicheSynthetique.validee:
     raise HTTPException(

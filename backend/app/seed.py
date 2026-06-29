@@ -1,4 +1,9 @@
-"""Seed ISESOD — données initiales (idempotent)."""
+"""Seed ISESOD — données initiales (idempotent).
+
+Insère uniquement : permissions, rôles, structure académique (faculté, cycles,
+filières, promotions, année active, cours RIT) et le compte administrateur.
+Aucun étudiant ni enseignant de test n'est créé.
+"""
 
 from datetime import date
 

@@ -54,7 +54,7 @@ export function MatriculeAuthPanel({ role, roleLabel, accentDescription }) {
 
     setFormError('')
     try {
-      await handleLogin(matricule.trim(), motDePasse)
+      await handleLogin(matricule.trim(), motDePasse, role)
     } catch (error) {
       setFormError(error instanceof ApiError ? error.message : 'Connexion impossible')
     }

@@ -36,12 +36,12 @@ export function Modal({ open, onClose, title, children, className, size = 'md' }
         aria-modal="true"
         aria-labelledby="modal-title"
         className={cn(
-          'relative w-full rounded-2xl border border-white/10 bg-warm-100 shadow-soft',
+          'relative flex max-h-[min(90vh,calc(100vh-2rem))] w-full flex-col overflow-hidden rounded-2xl border border-white/10 bg-warm-100 shadow-soft',
           sizes[size],
           className,
         )}
       >
-        <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
+        <div className="flex shrink-0 items-center justify-between border-b border-white/10 px-5 py-4">
           <h2 id="modal-title" className="font-display text-lg font-semibold text-ink-900">
             {title}
           </h2>
@@ -54,7 +54,7 @@ export function Modal({ open, onClose, title, children, className, size = 'md' }
             <X className="h-5 w-5" />
           </button>
         </div>
-        <div className="p-5">{children}</div>
+        <div className="overflow-y-auto p-5">{children}</div>
       </div>
     </div>
   )

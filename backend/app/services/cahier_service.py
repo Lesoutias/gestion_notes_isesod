@@ -125,6 +125,16 @@ def _build_ligne_data(
   }
 
 
+def calculer_resultats_cours_etudiant(
+  db: Session,
+  cours: Cours,
+  annee_academique_id: int,
+  etudiant_id: int,
+) -> dict:
+  """Résultats agrégés d'un cours pour un étudiant (moyenne /20, points pondérés)."""
+  return _build_ligne_data(db, cours, annee_academique_id, etudiant_id)
+
+
 def _ligne_totaux_affichage(
   db: Session,
   cours: Cours,

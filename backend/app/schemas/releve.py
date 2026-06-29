@@ -5,6 +5,16 @@ from pydantic import BaseModel, ConfigDict, Field
 from app.models.enums import StatutReleveCotes
 
 
+class EtudiantReleveBrief(BaseModel):
+  model_config = ConfigDict(from_attributes=True)
+
+  id: int
+  matricule: str | None
+  nom: str
+  postnom: str
+  prenom: str
+
+
 class ReleveCotesLigneResponse(BaseModel):
   model_config = ConfigDict(from_attributes=True)
 
@@ -36,6 +46,7 @@ class ReleveCotesResponse(BaseModel):
   rang: int
   statut: StatutReleveCotes
   date_generation: datetime
+  etudiant: EtudiantReleveBrief | None = None
 
 
 class ReleveCotesDetailResponse(ReleveCotesResponse):
@@ -46,3 +57,15 @@ class ReleveCotesGenerateResponse(BaseModel):
   fiche_id: int
   total_generes: int
   releves: list[ReleveCotesDetailResponse]
+
+
+class ReleveProclamationRequest(BaseModel):
+  promotion_id: int
+  annee_academique_id: int
+
+
+class ReleveProclamationResponse(BaseModel):
+  promotion_id: int
+  annee_academique_id: int
+  fiche_id: int
+  total_proclames: int

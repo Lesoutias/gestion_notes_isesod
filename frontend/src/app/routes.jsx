@@ -1,7 +1,6 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import PublicLayout from '../components/layout/PublicLayout'
 import AdminLayout from '../components/admin/AdminLayout'
-import { RequireAuth } from '../components/auth/RequireAuth'
 import { ProtectedRoute } from '../components/auth/ProtectedRoute'
 import HomePage from '../pages/HomePage'
 import PresentationPage from '../pages/PresentationPage'
@@ -23,6 +22,8 @@ import CoursFormPage from '../pages/admin/CoursFormPage'
 import AffectationsCoursPage from '../pages/admin/AffectationsCoursPage'
 import AffecterCoursPromotionPage from '../pages/admin/AffecterCoursPromotionPage'
 import AffecterEnseignantCoursPage from '../pages/admin/AffecterEnseignantCoursPage'
+import FichesSynthetiquesPage from '../pages/admin/FichesSynthetiquesPage'
+import RelevesCotesPage from '../pages/admin/RelevesCotesPage'
 import EnseignantLayout from '../components/enseignant/EnseignantLayout'
 import EnseignantDashboard from '../pages/enseignant/EnseignantDashboard'
 import MesCoursPage from '../pages/enseignant/MesCoursPage'
@@ -30,7 +31,10 @@ import EvaluationsPage from '../pages/enseignant/EvaluationsPage'
 import EvaluationFormPage from '../pages/enseignant/EvaluationFormPage'
 import CotationEvaluationPage from '../pages/enseignant/CotationEvaluationPage'
 import CahierNotesPage from '../pages/enseignant/CahierNotesPage'
-import { EtudiantEspacePage } from '../pages/espace/EspacePages'
+import EtudiantLayout from '../components/etudiant/EtudiantLayout'
+import EtudiantDashboard from '../pages/etudiant/EtudiantDashboard'
+import EtudiantRelevesPage from '../pages/etudiant/EtudiantRelevesPage'
+import EtudiantEvaluationsPage from '../pages/etudiant/EtudiantEvaluationsPage'
 import NotFoundPage from '../pages/NotFoundPage'
 
 export const router = createBrowserRouter([
@@ -49,11 +53,7 @@ export const router = createBrowserRouter([
       { path: 'connexion/admin', element: <AdminLoginPage /> },
       {
         path: 'espace/etudiant',
-        element: (
-          <RequireAuth role="etudiant">
-            <EtudiantEspacePage />
-          </RequireAuth>
-        ),
+        element: <Navigate to="/etudiant" replace />,
       },
       { path: 'espace/enseignant', element: <Navigate to="/enseignant" replace /> },
       { path: 'espace/admin', element: <Navigate to="/admin/dashboard" replace /> },
@@ -84,6 +84,8 @@ export const router = createBrowserRouter([
       { path: 'affectations-cours/nouveau', element: <AffecterCoursPromotionPage /> },
       { path: 'affectations-cours/:id/modifier', element: <AffecterCoursPromotionPage /> },
       { path: 'affectations-cours/:id/enseignant', element: <AffecterEnseignantCoursPage /> },
+      { path: 'fiches-synthetiques', element: <FichesSynthetiquesPage /> },
+      { path: 'releves-cotes', element: <RelevesCotesPage /> },
     ],
   },
   {
@@ -101,6 +103,19 @@ export const router = createBrowserRouter([
       { path: 'evaluations/:id/modifier', element: <EvaluationFormPage /> },
       { path: 'evaluations/:id/cotation', element: <CotationEvaluationPage /> },
       { path: 'cahier-notes', element: <CahierNotesPage /> },
+    ],
+  },
+  {
+    path: '/etudiant',
+    element: (
+      <ProtectedRoute role="etudiant">
+        <EtudiantLayout />
+      </ProtectedRoute>
+    ),
+    children: [
+      { index: true, element: <EtudiantDashboard /> },
+      { path: 'evaluations', element: <EtudiantEvaluationsPage /> },
+      { path: 'releves', element: <EtudiantRelevesPage /> },
     ],
   },
 ])

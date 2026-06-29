@@ -1,33 +1,19 @@
 import { NavLink } from 'react-router-dom'
-import {
-  BookOpen,
-  Calendar,
-  FileText,
-  GraduationCap,
-  Layers,
-  LayoutDashboard,
-  Table2,
-  UserCog,
-} from 'lucide-react'
+import { ClipboardList, FileText, LayoutDashboard } from 'lucide-react'
 import { cn } from '../../lib/cn'
 
 const NAV_ITEMS = [
-  { to: '/admin/dashboard', label: 'Tableau de bord', icon: LayoutDashboard, end: true },
-  { to: '/admin/etudiants', label: 'Étudiants', icon: GraduationCap, end: false },
-  { to: '/admin/enseignants', label: 'Enseignants', icon: UserCog, end: false },
-  { to: '/admin/annees-academiques', label: 'Années académiques', icon: Calendar, end: false },
-  { to: '/admin/cours', label: 'Cours', icon: BookOpen, end: false },
-  { to: '/admin/affectations-cours', label: 'Affectations des cours', icon: Layers, end: false },
-  { to: '/admin/fiches-synthetiques', label: 'Fiches synthétiques', icon: Table2, end: false },
-  { to: '/admin/releves-cotes', label: 'Relevés de cotes', icon: FileText, end: false },
+  { to: '/etudiant', label: 'Tableau de bord', icon: LayoutDashboard, end: true },
+  { to: '/etudiant/evaluations', label: 'Évaluations', icon: ClipboardList, end: false },
+  { to: '/etudiant/releves', label: 'Relevés de cotes', icon: FileText, end: false },
 ]
 
-export function AdminSidebar() {
+export function EtudiantSidebar() {
   return (
     <aside className="fixed left-0 top-0 z-40 flex h-screen w-64 flex-col overflow-y-auto border-r border-white/10 bg-warm-100">
       <div className="border-b border-white/10 px-5 py-5">
         <p className="font-display text-lg font-semibold text-ink-900">ISESOD</p>
-        <p className="text-xs text-ink-400">Administration</p>
+        <p className="text-xs text-ink-400">Espace étudiant</p>
       </div>
       <nav className="flex-1 space-y-1 p-3">
         {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (

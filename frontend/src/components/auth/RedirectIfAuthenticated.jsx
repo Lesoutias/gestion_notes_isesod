@@ -5,7 +5,7 @@ import { selectAuthRole, selectIsAuthenticated } from '../../features/auth/authS
 const ROLE_REDIRECTS = {
   admin: '/admin/dashboard',
   enseignant: '/enseignant',
-  etudiant: '/espace/etudiant',
+  etudiant: '/etudiant',
 }
 
 export function RedirectIfAuthenticated({ children, expectedRole }) {

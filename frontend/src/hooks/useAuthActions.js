@@ -7,17 +7,17 @@ import { ApiError } from '../lib/api'
 const ROLE_REDIRECTS = {
   admin: '/admin/dashboard',
   enseignant: '/enseignant',
-  etudiant: '/espace/etudiant',
+  etudiant: '/etudiant',
 }
 
 export function useAuthActions() {
   const dispatch = useDispatch()
   const navigate = useNavigate()
 
-  async function handleLogin(identifiant, motDePasse) {
+  async function handleLogin(identifiant, motDePasse, role) {
     dispatch(authStart())
     try {
-      const data = await loginApi(identifiant, motDePasse)
+      const data = await loginApi(identifiant, motDePasse, role)
       dispatch(authSuccess(data))
       const roleNom = data.role?.nom
       navigate(ROLE_REDIRECTS[roleNom] || '/')

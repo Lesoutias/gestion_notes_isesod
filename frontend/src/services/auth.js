@@ -1,9 +1,9 @@
 import { apiRequest } from './api'
 
-export function login(identifiant, motDePasse) {
+export function login(identifiant, motDePasse, role) {
   return apiRequest('/auth/login', {
     method: 'POST',
-    body: { identifiant, mot_de_passe: motDePasse },
+    body: { identifiant, mot_de_passe: motDePasse, role },
   })
 }
 

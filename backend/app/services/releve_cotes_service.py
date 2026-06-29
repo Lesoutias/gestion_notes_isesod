@@ -258,3 +258,64 @@ def generer_releves_transaction(db: Session, fiche_id: int) -> list[ReleveCotes]
   except Exception:
     db.rollback()
     raise
+
+
+def proclamer_releves_cotes(
+  db: Session,
+  promotion_id: int,
+  annee_academique_id: int,
+) -> tuple[int, int]:
+  """Publie les relevés générés pour une promotion et une année académique."""
+  fiche = (
+    db.query(FicheSynthetique)
+    .filter(
+      FicheSynthetique.promotion_id == promotion_id,
+      FicheSynthetique.annee_academique_id == annee_academique_id,
+    )
+    .first()
+  )
+  if not fiche:
+    raise HTTPException(
+      status_code=status.HTTP_404_NOT_FOUND,
+      detail="Fiche synthétique introuvable pour cette promotion et cette année",
+    )
+
+  if fiche.statut != StatutFicheSynthetique.validee:
+    raise HTTPException(
+      status_code=status.HTTP_400_BAD_REQUEST,
+      detail="La fiche synthétique doit être validée avant la proclamation des relevés",
+    )
+
+  releves = (
+    db.query(ReleveCotes)
+    .filter(
+      ReleveCotes.fiche_id == fiche.id,
+      ReleveCotes.statut == StatutReleveCotes.genere,
+    )
+    .all()
+  )
+
+  if not releves:
+    deja_publies = (
+      db.query(ReleveCotes)
+      .filter(
+        ReleveCotes.fiche_id == fiche.id,
+        ReleveCotes.statut == StatutReleveCotes.publie,
+      )
+      .count()
+    )
+    if deja_publies > 0:
+      raise HTTPException(
+        status_code=status.HTTP_409_CONFLICT,
+        detail="Les relevés de cotes ont déjà été proclamés",
+      )
+    raise HTTPException(
+      status_code=status.HTTP_400_BAD_REQUEST,
+      detail="Aucun relevé de cotes à proclamer pour cette promotion",
+    )
+
+  for releve in releves:
+    releve.statut = StatutReleveCotes.publie
+
+  db.commit()
+  return fiche.id, len(releves)

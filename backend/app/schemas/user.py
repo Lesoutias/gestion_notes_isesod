@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.models.enums import StatutUser
+from app.models.enums import RoleNom, StatutUser
 from app.schemas.academic import EnseignantCreate, EnseignantResponse, EtudiantCreate, EtudiantResponse
 from app.schemas.common import InstitutionalEmail
 
@@ -107,6 +107,7 @@ class EnseignantAccountCreate(EnseignantCreate):
 class LoginRequest(BaseModel):
   identifiant: str
   mot_de_passe: str
+  role: RoleNom
 
 
 class MatriculeVerifyRequest(BaseModel):

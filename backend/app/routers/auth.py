@@ -202,6 +202,12 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
       detail="Compte inactif",
     )
 
+  if user.role.nom != payload.role.value:
+    raise HTTPException(
+      status_code=status.HTTP_403_FORBIDDEN,
+      detail="Ce compte n'est pas autorisé dans cet espace de connexion",
+    )
+
   return _build_login_response(user)
 
 

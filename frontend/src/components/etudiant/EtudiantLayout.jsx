@@ -1,10 +1,10 @@
 import { Outlet } from 'react-router-dom'
-import { AdminSidebar } from './AdminSidebar'
+import { EtudiantSidebar } from './EtudiantSidebar'
 
-export default function AdminLayout() {
+export default function EtudiantLayout() {
   return (
     <div className="min-h-screen bg-warm-50 pl-64">
-      <AdminSidebar />
+      <EtudiantSidebar />
       <div className="flex min-w-0 flex-col">
         <Outlet />
       </div>
